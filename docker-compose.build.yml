@@ -2,7 +2,12 @@ version: '3.8'
 
 services:
   runner:
-    image: ${RUNNER_IMAGE:-ghcr.io/tricorefile/github-runner-universal:latest}
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        RUNNER_VERSION: ${RUNNER_VERSION:-2.328.0}
+    image: github-runner-universal:latest
     container_name: ${CONTAINER_NAME:-github-runner}
     environment:
       # Runner配置
