@@ -1,0 +1,97 @@
+version: '3.8'
+
+# Docker Compose 配置用于本地测试 GitHub Runner
+# 使用方法: docker-compose -f docker-compose.test.yml up
+
+services:
+  github-runner-test:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        RUNNER_VERSION: 2.328.0
+        TARGETPLATFORM: linux/amd64
+    
+    container_name: github-runner-local-test
+    
+    environment:
+      # Runner 基础配置
+      RUNNER_NAME: "test-runner-local"
+      RUNNER_WORKDIR: "/home/runner/work"
+      RUNNER_GROUP: "default"
+      RUNNER_LABELS: "self-hosted,linux,x64,docker"
+      
+      # 注意: 以下需要替换为实际值进行完整测试
+      # GITHUB_TOKEN: "your_github_pat_token"
+      # GITHUB_OWNER: "your_github_username_or_org"
+      # GITHUB_REPOSITORY: "your_repository_name"
+      
+      # 可选配置
+      RUNNER_ALLOW_RUNASROOT: "0"
+      DISABLE_AUTO_UPDATE: "true"
+    
+    volumes:
+      # 挂载 Docker socket 以支持 Docker-in-Docker
+      - /var/run/docker.sock:/var/run/docker.sock
+      # 持久化 Runner 工作目录
+      - runner_work:/home/runner/work
+      # 持久化 Runner 配置
+      - runner_config:/home/runner/actions-runner
+    
+    # 健康检查
+    healthcheck:
+      test: ["CMD", "pgrep", "-f", "Runner.Listener"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+    
+    # 资源限制
+    deploy:
+      resources:
+        limits:
+          cpus: '2'
+          memory: 4G
+        reservations:
+          cpus: '1'
+          memory: 2G
+    
+    restart: unless-stopped
+    
+    networks:
+      - runner-network
+
+  # 可选: 添加一个测试数据库服务来验证 Runner 可以连接到其他服务
+  test-db:
+    image: postgres:16-alpine
+    container_name: runner-test-db
+    environment:
+      POSTGRES_USER: testuser
+      POSTGRES_PASSWORD: testpass
+      POSTGRES_DB: testdb
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - runner-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U testuser"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  runner_work:
+    driver: local
+  runner_config:
+    driver: local
+  postgres_data:
+    driver: local
+
+networks:
+  runner-network:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.20.0.0/16
