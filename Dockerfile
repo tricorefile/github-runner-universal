@@ -128,7 +128,8 @@ RUN wget -q https://releases.hashicorp.com/terraform/1.7.0/terraform_1.7.0_linux
     rm terraform_1.7.0_linux_amd64.zip
 
 # 创建Runner用户
-RUN useradd -m -s /bin/bash runner && \
+RUN groupadd -f docker && \
+    useradd -m -s /bin/bash runner && \
     usermod -aG sudo,docker runner && \
     echo "runner ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers
 
