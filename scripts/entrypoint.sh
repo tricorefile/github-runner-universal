@@ -1,23 +1,23 @@
 #!/bin/bash
 set -e
 
-# Color output
+# 颜色输出
 RED='\033[0;31m'
 GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
 NC='\033[0m'
 
-# Function to print colored messages
+# 打印彩色消息的函数
 log_info() { echo -e "${GREEN}[INFO]${NC} $1"; }
 log_warn() { echo -e "${YELLOW}[WARN]${NC} $1"; }
 log_error() { echo -e "${RED}[ERROR]${NC} $1"; }
 
-# Validate required environment variables
+# 验证必需的环境变量
 : ${GITHUB_TOKEN:?Need GITHUB_TOKEN environment variable}
 : ${GITHUB_OWNER:?Need GITHUB_OWNER environment variable}
 : ${RUNNER_SCOPE:=repo}
 
-# Set defaults
+# 设置默认值
 RUNNER_NAME=${RUNNER_NAME:-$(hostname)}
 RUNNER_LABELS=${RUNNER_LABELS:-self-hosted,linux,x64}
 RUNNER_WORKDIR=${RUNNER_WORKDIR:-_work}
@@ -27,7 +27,7 @@ DISABLE_AUTO_UPDATE=${DISABLE_AUTO_UPDATE:-true}
 
 cd /home/runner/actions-runner
 
-# Determine registration URL and API endpoint based on scope
+# 根据范围确定注册URL和API端点
 case "$RUNNER_SCOPE" in
     "repo")
         if [ -z "$GITHUB_REPOSITORY" ]; then
@@ -54,7 +54,7 @@ case "$RUNNER_SCOPE" in
         ;;
 esac
 
-# Function to get registration token
+# 获取注册令牌的函数
 get_registration_token() {
     local response=$(curl -sX POST \
         -H "Authorization: token ${GITHUB_TOKEN}" \
@@ -78,7 +78,7 @@ get_registration_token() {
     echo "$token"
 }
 
-# Configure runner if not already configured
+# 如果尚未配置，则配置Runner
 if [ ! -f ".runner" ]; then
     log_info "Runner not configured, starting configuration..."
     log_info "Runner Name: ${RUNNER_NAME}"
@@ -87,7 +87,7 @@ if [ ! -f ".runner" ]; then
     log_info "Runner Group: ${RUNNER_GROUP}"
     log_info "Ephemeral: ${EPHEMERAL}"
     
-    # Get registration token
+    # 获取注册令牌
     REG_TOKEN=$(get_registration_token)
     if [ $? -ne 0 ]; then
         exit 1
@@ -95,7 +95,7 @@ if [ ! -f ".runner" ]; then
     
     log_info "Successfully obtained registration token"
     
-    # Build configuration command
+    # 构建配置命令
     CONFIG_CMD="./config.sh \
         --url ${REGISTRATION_URL} \
         --token ${REG_TOKEN} \
@@ -106,19 +106,19 @@ if [ ! -f ".runner" ]; then
         --unattended \
         --replace"
     
-    # Add ephemeral flag if requested
+    # 如果需要，添加临时标志
     if [ "$EPHEMERAL" = "true" ]; then
         CONFIG_CMD="$CONFIG_CMD --ephemeral"
         log_info "Runner will run in ephemeral mode"
     fi
     
-    # Add disable auto-update flag if requested
+    # 如果需要，添加禁用自动更新标志
     if [ "$DISABLE_AUTO_UPDATE" = "true" ]; then
         CONFIG_CMD="$CONFIG_CMD --disableupdate"
         log_info "Auto-update disabled"
     fi
     
-    # Execute configuration
+    # 执行配置
     log_info "Configuring runner..."
     eval $CONFIG_CMD
     
@@ -132,14 +132,14 @@ else
     log_info "Runner already configured, skipping configuration"
 fi
 
-# Cleanup function
+# 清理函数
 cleanup() {
     log_info "Cleanup initiated..."
     
     if [ -f ".runner" ] && [ "$EPHEMERAL" != "true" ]; then
         log_info "Removing runner registration..."
         
-        # Get removal token
+        # 获取移除令牌
         REMOVE_TOKEN=$(curl -sX POST \
             -H "Authorization: token ${GITHUB_TOKEN}" \
             -H "Accept: application/vnd.github.v3+json" \
@@ -156,16 +156,16 @@ cleanup() {
     log_info "Cleanup completed"
 }
 
-# Set trap to cleanup on exit (except for ephemeral runners)
+# 设置退出时清理的陷阱（临时Runner除外）
 if [ "$EPHEMERAL" != "true" ]; then
     trap cleanup EXIT INT TERM
 fi
 
-# Start the runner
+# 启动Runner
 log_info "Starting GitHub Actions Runner..."
 log_info "Press Ctrl+C to stop"
 
-# Run the runner
+# 运行Runner
 if [ "$EPHEMERAL" = "true" ]; then
     log_info "Running in ephemeral mode (will exit after one job)"
     exec ./run.sh --once

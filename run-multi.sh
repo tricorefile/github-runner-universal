@@ -1,27 +1,27 @@
 #!/bin/bash
 
-# Script to run multiple runners for different repositories/organizations
-# Usage: ./run-multi.sh [start|stop|status|logs]
+# 用于运行多个不同仓库/组织Runner的脚本
+# 用法: ./run-multi.sh [start|stop|status|logs]
 
 set -e
 
-# Color output
+# 颜色输出
 RED='\033[0;31m'
 GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
 BLUE='\033[0;34m'
 NC='\033[0m'
 
-# Runner configurations directory
+# Runner配置目录
 CONFIGS_DIR="./configs"
 
-# Function to print colored messages
+# 打印彩色消息的函数
 log_info() { echo -e "${GREEN}[INFO]${NC} $1"; }
 log_warn() { echo -e "${YELLOW}[WARN]${NC} $1"; }
 log_error() { echo -e "${RED}[ERROR]${NC} $1"; }
 log_blue() { echo -e "${BLUE}$1${NC}"; }
 
-# Function to start a runner with specific config
+# 使用特定配置启动Runner的函数
 start_runner() {
     local config_file=$1
     local runner_name=$(basename "$config_file" .env)
@@ -33,17 +33,17 @@ start_runner() {
     
     log_info "Starting runner: $runner_name"
     
-    # Create a project directory for this runner
+    # 为此Runner创建项目目录
     local project_dir="runners/$runner_name"
     mkdir -p "$project_dir"
     
-    # Copy docker-compose.yml to project directory
+    # 将docker-compose.yml复制到项目目录
     cp docker-compose.yml "$project_dir/"
     
-    # Copy environment file
+    # 复制环境文件
     cp "$config_file" "$project_dir/.env"
     
-    # Start the runner
+    # 启动Runner
     (cd "$project_dir" && docker-compose up -d)
     
     if [ $? -eq 0 ]; then
@@ -53,7 +53,7 @@ start_runner() {
     fi
 }
 
-# Function to stop a runner
+# 停止Runner的函数
 stop_runner() {
     local runner_name=$1
     local project_dir="runners/$runner_name"
@@ -67,7 +67,7 @@ stop_runner() {
     (cd "$project_dir" && docker-compose down)
 }
 
-# Function to get runner status
+# 获取Runner状态的函数
 status_runner() {
     local runner_name=$1
     local project_dir="runners/$runner_name"
@@ -92,7 +92,7 @@ status_runner() {
     esac
 }
 
-# Function to show runner logs
+# 显示Runner日志的函数
 logs_runner() {
     local runner_name=$1
     local project_dir="runners/$runner_name"
@@ -105,11 +105,11 @@ logs_runner() {
     (cd "$project_dir" && docker-compose logs -f)
 }
 
-# Main command handler
+# 主命令处理器
 case "$1" in
     "start")
         if [ -z "$2" ]; then
-            # Start all runners
+            # 启动所有Runner
             log_info "Starting all configured runners..."
             for config in "$CONFIGS_DIR"/*.env; do
                 if [ -f "$config" ]; then
@@ -117,14 +117,14 @@ case "$1" in
                 fi
             done
         else
-            # Start specific runner
+            # 启动特定Runner
             start_runner "$CONFIGS_DIR/$2.env"
         fi
         ;;
         
     "stop")
         if [ -z "$2" ]; then
-            # Stop all runners
+            # 停止所有Runner
             log_info "Stopping all runners..."
             for dir in runners/*/; do
                 if [ -d "$dir" ]; then
@@ -133,7 +133,7 @@ case "$1" in
                 fi
             done
         else
-            # Stop specific runner
+            # 停止特定Runner
             stop_runner "$2"
         fi
         ;;
@@ -142,7 +142,7 @@ case "$1" in
         log_blue "GitHub Runners Status:"
         log_blue "======================"
         
-        # Check all configured runners
+        # 检查所有已配置的Runner
         for config in "$CONFIGS_DIR"/*.env; do
             if [ -f "$config" ]; then
                 runner_name=$(basename "$config" .env)
@@ -166,7 +166,7 @@ case "$1" in
         for config in "$CONFIGS_DIR"/*.env; do
             if [ -f "$config" ]; then
                 runner_name=$(basename "$config" .env)
-                # Try to extract some info from the config
+                # 尝试从配置中提取一些信息
                 source "$config" 2>/dev/null
                 echo "  • $runner_name"
                 echo "    - Scope: ${RUNNER_SCOPE:-repo}"

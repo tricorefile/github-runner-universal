@@ -10,30 +10,30 @@ services:
     image: github-runner-universal:latest
     container_name: ${CONTAINER_NAME:-github-runner}
     environment:
-      # Runner Configuration
+      # Runner配置
       - GITHUB_TOKEN=${GITHUB_TOKEN}
-      - RUNNER_SCOPE=${RUNNER_SCOPE:-repo}  # repo, org, or enterprise
+      - RUNNER_SCOPE=${RUNNER_SCOPE:-repo}  # repo, org, 或 enterprise
       - GITHUB_OWNER=${GITHUB_OWNER}
-      - GITHUB_REPOSITORY=${GITHUB_REPOSITORY:-}  # Optional for org/enterprise runners
+      - GITHUB_REPOSITORY=${GITHUB_REPOSITORY:-}  # 对于org/enterprise Runner是可选的
       - RUNNER_NAME=${RUNNER_NAME:-universal-runner}
       - RUNNER_LABELS=${RUNNER_LABELS:-self-hosted,linux,x64,docker}
       - RUNNER_WORKDIR=${RUNNER_WORKDIR:-_work}
       - RUNNER_GROUP=${RUNNER_GROUP:-default}
-      - EPHEMERAL=${EPHEMERAL:-false}  # true for ephemeral runners
+      - EPHEMERAL=${EPHEMERAL:-false}  # true表示临时Runner
       - DISABLE_AUTO_UPDATE=${DISABLE_AUTO_UPDATE:-true}
     volumes:
-      # Docker socket for Docker-in-Docker
+      # Docker套接字，用于Docker-in-Docker
       - /var/run/docker.sock:/var/run/docker.sock
-      # Persistent work directory
+      # 持久化工作目录
       - ${WORK_DIR:-./work}:/home/runner/_work
-      # Shared cache directories (optional)
+      # 共享缓存目录（可选）
       - ${CARGO_CACHE:-./cache/cargo}:/home/runner/.cargo
       - ${NPM_CACHE:-./cache/npm}:/home/runner/.npm
       - ${MAVEN_CACHE:-./cache/maven}:/home/runner/.m2
       - ${GRADLE_CACHE:-./cache/gradle}:/home/runner/.gradle
-      # Custom tools directory (optional)
+      # 自定义工具目录（可选）
       - ${TOOLS_DIR:-./tools}:/opt/tools:ro
-      # SSH keys (optional)
+      # SSH密钥（可选）
       - ${SSH_DIR:-./ssh}:/home/runner/.ssh:ro
     restart: ${RESTART_POLICY:-unless-stopped}
     networks:
