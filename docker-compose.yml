@@ -1,8 +1,7 @@
-version: '3.8'
-
 services:
   runner:
     image: ${RUNNER_IMAGE:-ghcr.io/tricorefile/github-runner-universal:latest}
+    platform: ${RUNNER_PLATFORM:-linux/amd64}
     container_name: ${CONTAINER_NAME:-github-runner}
     environment:
       # Runner配置
