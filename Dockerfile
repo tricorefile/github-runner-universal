@@ -79,8 +79,10 @@ ENV PATH="/usr/local/go/bin:${PATH}"
 RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y --default-toolchain stable
 ENV PATH="/root/.cargo/bin:${PATH}"
 
-# 安装Python工具
-RUN pip3 install --no-cache-dir \
+# 安装Python工具 - 使用专用虚拟环境避免PEP 668问题
+RUN python3 -m venv /opt/pytools && \
+    /opt/pytools/bin/pip install --upgrade pip && \
+    /opt/pytools/bin/pip install --no-cache-dir \
     pipenv \
     poetry \
     virtualenv \
@@ -89,6 +91,9 @@ RUN pip3 install --no-cache-dir \
     flake8 \
     mypy \
     pytest
+
+# 将Python工具添加到PATH
+ENV PATH="/opt/pytools/bin:${PATH}"
 
 # 安装Java (OpenJDK)
 RUN apt-get update && \
@@ -148,7 +153,7 @@ COPY --chown=runner:runner scripts/ /home/runner/scripts/
 RUN chmod +x /home/runner/scripts/*.sh
 
 # 为所有工具设置PATH
-ENV PATH="/home/runner/.cargo/bin:/usr/local/go/bin:/usr/share/dotnet:/usr/local/bin:${PATH}"
+ENV PATH="/opt/pytools/bin:/home/runner/.cargo/bin:/usr/local/go/bin:/usr/share/dotnet:/usr/local/bin:${PATH}"
 ENV DOTNET_ROOT="/usr/share/dotnet"
 
 WORKDIR /home/runner/actions-runner
