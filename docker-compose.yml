@@ -1,0 +1,53 @@
+version: '3.8'
+
+services:
+  runner:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        RUNNER_VERSION: ${RUNNER_VERSION:-2.328.0}
+    image: github-runner-universal:latest
+    container_name: ${CONTAINER_NAME:-github-runner}
+    environment:
+      # Runner Configuration
+      - GITHUB_TOKEN=${GITHUB_TOKEN}
+      - RUNNER_SCOPE=${RUNNER_SCOPE:-repo}  # repo, org, or enterprise
+      - GITHUB_OWNER=${GITHUB_OWNER}
+      - GITHUB_REPOSITORY=${GITHUB_REPOSITORY:-}  # Optional for org/enterprise runners
+      - RUNNER_NAME=${RUNNER_NAME:-universal-runner}
+      - RUNNER_LABELS=${RUNNER_LABELS:-self-hosted,linux,x64,docker}
+      - RUNNER_WORKDIR=${RUNNER_WORKDIR:-_work}
+      - RUNNER_GROUP=${RUNNER_GROUP:-default}
+      - EPHEMERAL=${EPHEMERAL:-false}  # true for ephemeral runners
+      - DISABLE_AUTO_UPDATE=${DISABLE_AUTO_UPDATE:-true}
+    volumes:
+      # Docker socket for Docker-in-Docker
+      - /var/run/docker.sock:/var/run/docker.sock
+      # Persistent work directory
+      - ${WORK_DIR:-./work}:/home/runner/_work
+      # Shared cache directories (optional)
+      - ${CARGO_CACHE:-./cache/cargo}:/home/runner/.cargo
+      - ${NPM_CACHE:-./cache/npm}:/home/runner/.npm
+      - ${MAVEN_CACHE:-./cache/maven}:/home/runner/.m2
+      - ${GRADLE_CACHE:-./cache/gradle}:/home/runner/.gradle
+      # Custom tools directory (optional)
+      - ${TOOLS_DIR:-./tools}:/opt/tools:ro
+      # SSH keys (optional)
+      - ${SSH_DIR:-./ssh}:/home/runner/.ssh:ro
+    restart: ${RESTART_POLICY:-unless-stopped}
+    networks:
+      - runner-network
+    deploy:
+      resources:
+        limits:
+          cpus: ${CPU_LIMIT:-4}
+          memory: ${MEMORY_LIMIT:-8G}
+        reservations:
+          cpus: ${CPU_RESERVATION:-1}
+          memory: ${MEMORY_RESERVATION:-2G}
+
+networks:
+  runner-network:
+    driver: bridge
+    name: ${NETWORK_NAME:-runner-network}

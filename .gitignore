@@ -1,0 +1,50 @@
+# Environment files
+.env
+*.env
+!.env.example
+!configs/*.env
+
+# Work directories
+work/
+runners/
+
+# Cache directories
+cache/
+.cache/
+.cargo/
+.npm/
+.m2/
+.gradle/
+
+# SSH keys
+ssh/*
+!ssh/.gitkeep
+
+# Tools
+tools/*
+!tools/.gitkeep
+
+# Logs
+*.log
+logs/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Editor files
+*.swp
+*.swo
+*~
+.vscode/
+.idea/
+
+# Docker
+*.pid
+*.seed
+*.pid.lock
+
+# Temporary files
+tmp/
+temp/
+*.tmp
