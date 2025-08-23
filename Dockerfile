@@ -63,16 +63,32 @@ RUN apt-get update && apt-get install -y \
     # 云CLI工具占位符（根据需要稍后安装）
     && rm -rf /var/lib/apt/lists/*
 
-# 安装Node.js (LTS)
-RUN curl -fsSL https://deb.nodesource.com/setup_lts.x | bash - && \
-    apt-get install -y nodejs && \
-    npm install -g yarn pnpm && \
-    rm -rf /var/lib/apt/lists/*
+# 安装Node.js (LTS) 和 npm - 使用官方二进制文件支持多架构
+RUN ARCH=$(dpkg --print-architecture) && \
+    NODE_VERSION="v20.11.0" && \
+    if [ "$ARCH" = "amd64" ]; then \
+        NODE_ARCH="x64"; \
+    elif [ "$ARCH" = "arm64" ]; then \
+        NODE_ARCH="arm64"; \
+    else \
+        NODE_ARCH="$ARCH"; \
+    fi && \
+    curl -fsSL https://nodejs.org/dist/${NODE_VERSION}/node-${NODE_VERSION}-linux-${NODE_ARCH}.tar.gz | tar -xzC /usr/local --strip-components=1 && \
+    npm install -g yarn pnpm
 
-# 安装Go
-RUN wget -q https://go.dev/dl/go1.22.0.linux-amd64.tar.gz && \
-    tar -C /usr/local -xzf go1.22.0.linux-amd64.tar.gz && \
-    rm go1.22.0.linux-amd64.tar.gz
+# 安装Go - 支持多架构
+RUN ARCH=$(dpkg --print-architecture) && \
+    GO_VERSION="1.22.0" && \
+    if [ "$ARCH" = "amd64" ]; then \
+        GO_ARCH="amd64"; \
+    elif [ "$ARCH" = "arm64" ]; then \
+        GO_ARCH="arm64"; \
+    else \
+        GO_ARCH="$ARCH"; \
+    fi && \
+    wget -q https://go.dev/dl/go${GO_VERSION}.linux-${GO_ARCH}.tar.gz && \
+    tar -C /usr/local -xzf go${GO_VERSION}.linux-${GO_ARCH}.tar.gz && \
+    rm go${GO_VERSION}.linux-${GO_ARCH}.tar.gz
 ENV PATH="/usr/local/go/bin:${PATH}"
 
 # Rust将在切换到runner用户后安装
