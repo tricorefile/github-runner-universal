@@ -25,6 +25,25 @@ RUNNER_GROUP=${RUNNER_GROUP:-default}
 EPHEMERAL=${EPHEMERAL:-false}
 DISABLE_AUTO_UPDATE=${DISABLE_AUTO_UPDATE:-true}
 
+# 确保 docker socket 权限正确（如果存在）
+if [ -e /var/run/docker.sock ]; then
+    log_info "Docker socket found, checking permissions..."
+    # 尝试访问 Docker
+    if ! docker version > /dev/null 2>&1; then
+        log_warn "Cannot access Docker daemon, attempting to fix permissions..."
+        sudo chown root:docker /var/run/docker.sock 2>/dev/null || true
+        sudo chmod 660 /var/run/docker.sock 2>/dev/null || true
+        # 确保当前用户在 docker 组
+        sudo usermod -aG docker $(whoami) 2>/dev/null || true
+    fi
+    # 验证 Docker 访问
+    if docker version > /dev/null 2>&1; then
+        log_info "Docker access confirmed"
+    else
+        log_warn "Docker access not available - Docker operations may fail"
+    fi
+fi
+
 cd /home/runner/actions-runner
 
 # 根据范围确定注册URL和API端点
