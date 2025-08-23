@@ -75,9 +75,7 @@ RUN wget -q https://go.dev/dl/go1.22.0.linux-amd64.tar.gz && \
     rm go1.22.0.linux-amd64.tar.gz
 ENV PATH="/usr/local/go/bin:${PATH}"
 
-# 安装Rust（可选，如果不需要可以注释掉）
-RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y --default-toolchain stable
-ENV PATH="/root/.cargo/bin:${PATH}"
+# Rust将在切换到runner用户后安装
 
 # 安装Python工具 - 使用专用虚拟环境避免PEP 668问题
 RUN python3 -m venv /opt/pytools && \
@@ -142,8 +140,9 @@ RUN groupadd -f docker && \
 USER runner
 WORKDIR /home/runner
 
-# 将Rust环境复制到Runner用户
-RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y --default-toolchain stable && \
+# 安装Rust（以runner用户身份）
+RUN mkdir -p /home/runner/.cargo/bin && \
+    curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y --default-toolchain stable && \
     . $HOME/.cargo/env && \
     rustup component add rustfmt clippy
 
@@ -159,7 +158,7 @@ COPY --chown=runner:runner scripts/ /home/runner/scripts/
 RUN chmod +x /home/runner/scripts/*.sh
 
 # 为所有工具设置PATH
-ENV PATH="/opt/pytools/bin:/home/runner/.cargo/bin:/usr/local/go/bin:/usr/share/dotnet:/usr/local/bin:${PATH}"
+ENV PATH="/home/runner/.cargo/bin:/opt/pytools/bin:/usr/local/go/bin:/usr/share/dotnet:/usr/local/bin:${PATH}"
 ENV DOTNET_ROOT="/usr/share/dotnet"
 
 WORKDIR /home/runner/actions-runner
