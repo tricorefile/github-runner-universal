@@ -25,6 +25,27 @@ RUNNER_GROUP=${RUNNER_GROUP:-default}
 EPHEMERAL=${EPHEMERAL:-false}
 DISABLE_AUTO_UPDATE=${DISABLE_AUTO_UPDATE:-true}
 
+# 确保 Rust/Cargo 目录权限正确
+if [ -d "/home/runner/.cargo" ] || [ -d "/home/runner/.rustup" ]; then
+    log_info "Checking Rust/Cargo directory permissions..."
+    # 确保目录存在且有正确权限
+    mkdir -p /home/runner/.cargo/bin /home/runner/.rustup/toolchains 2>/dev/null || true
+    
+    # 修复权限（如果需要）
+    if [ ! -w "/home/runner/.cargo" ] || [ ! -w "/home/runner/.rustup" ]; then
+        log_warn "Fixing Rust/Cargo directory permissions..."
+        sudo chown -R $(whoami):$(whoami) /home/runner/.cargo /home/runner/.rustup 2>/dev/null || true
+        sudo chmod -R 755 /home/runner/.cargo /home/runner/.rustup 2>/dev/null || true
+    fi
+    
+    # 确保 .cargo/env 文件存在
+    if [ ! -f "/home/runner/.cargo/env" ]; then
+        touch /home/runner/.cargo/env 2>/dev/null || true
+    fi
+    
+    log_info "Rust/Cargo permissions verified"
+fi
+
 # 确保 docker socket 权限正确（如果存在）
 if [ -e /var/run/docker.sock ]; then
     log_info "Docker socket found, checking permissions..."

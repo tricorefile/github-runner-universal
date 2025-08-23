@@ -153,8 +153,10 @@ RUN groupadd -f docker && \
     echo "runner ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers
 
 # 为runner用户预创建必要目录并设置权限
-RUN mkdir -p /home/runner/.cargo /home/runner/.rustup && \
-    chown -R runner:runner /home/runner/.cargo /home/runner/.rustup
+RUN mkdir -p /home/runner/.cargo/bin /home/runner/.rustup/toolchains && \
+    touch /home/runner/.cargo/env && \
+    chown -R runner:runner /home/runner && \
+    chmod -R 755 /home/runner/.cargo /home/runner/.rustup
 
 # 切换到Runner用户
 USER runner
