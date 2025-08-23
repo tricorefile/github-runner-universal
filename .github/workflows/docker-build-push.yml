@@ -26,7 +26,7 @@ env:
 jobs:
   build-and-push:
     ### 切换github 自带的或者 self hosted
-    runs-on: [self-hosted, linux, x64] #ubuntu-latest
+    runs-on: [self-hosted, linux, x64, docker, org-runner] #ubuntu-latest
     permissions:
       contents: read
       packages: write
