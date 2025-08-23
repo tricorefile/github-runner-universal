@@ -1,6 +1,6 @@
 services:
   runner:
-    image: ${RUNNER_IMAGE:-ghcr.io/tricorefile/github-runner-universal:latest}
+    image: ${RUNNER_IMAGE:-ghcr.io/tricorelife-labs/github-runner-universal:latest}
     platform: ${RUNNER_PLATFORM:-linux/amd64}
     container_name: ${CONTAINER_NAME:-github-runner}
     environment:
