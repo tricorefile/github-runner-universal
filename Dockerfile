@@ -136,13 +136,16 @@ RUN groupadd -f docker && \
     usermod -aG sudo,docker runner && \
     echo "runner ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers
 
+# 为runner用户预创建必要目录并设置权限
+RUN mkdir -p /home/runner/.cargo /home/runner/.rustup && \
+    chown -R runner:runner /home/runner/.cargo /home/runner/.rustup
+
 # 切换到Runner用户
 USER runner
 WORKDIR /home/runner
 
 # 安装Rust（以runner用户身份）
-RUN mkdir -p /home/runner/.cargo/bin && \
-    curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y --default-toolchain stable && \
+RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y --default-toolchain stable && \
     . $HOME/.cargo/env && \
     rustup component add rustfmt clippy
 
